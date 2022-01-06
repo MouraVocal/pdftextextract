@@ -11,25 +11,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const pdf_1 = require("pdfjs-dist/legacy/build/pdf");
 const fs_1 = require("fs");
-function getContent(src) {
+function getContent(src, pageNum) {
     return __awaiter(this, void 0, void 0, function* () {
         const doc = yield (0, pdf_1.getDocument)(src).promise;
-        const page = yield doc.getPage(1);
+        const page = yield doc.getPage(pageNum);
         return yield page.getTextContent();
     });
 }
-function getItems(src) {
+function getText(src) {
     return __awaiter(this, void 0, void 0, function* () {
-        const content = yield getContent(src);
-        const items = content.items.map((item) => {
-            (0, fs_1.writeFile)('teste.txt', item.str, {
+        const doc = yield (0, pdf_1.getDocument)(src).promise;
+        const numPages = doc.numPages;
+        let textContent = '';
+        for (let i = 1; i <= numPages; i++) {
+            const content = yield getContent(src, i);
+            (0, fs_1.writeFile)(`test.txt`, `PÁGINA ${i}`, {
                 encoding: 'utf-8',
                 flag: 'a'
             }, (err) => {
-                console.log(err);
+                if (err) {
+                    console.log(err);
+                }
             });
-        });
-        return items;
+            const items = content.items.map((item) => {
+                textContent += item.str;
+                (0, fs_1.writeFile)(`test.txt`, `${item.str}\n`, {
+                    encoding: 'utf-8',
+                    flag: 'a'
+                }, (err) => {
+                    if (err !== null) {
+                        console.log(err);
+                    }
+                });
+            });
+        }
+        console.log(textContent);
+        return textContent;
     });
 }
-getItems("./pdf/1.pdf");
+getText('./pdf/1.pdf');
